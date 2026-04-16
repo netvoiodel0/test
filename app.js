@@ -1,5 +1,5 @@
 const STORAGE_KEY = "quiz-site-progress-v1";
-const TARGET_QUESTIONS_PER_TEST = 100;
+const TARGET_QUESTIONS_PER_TEST = 50;
 const LETTERS = ["A", "B", "C", "D", "E", "F"];
 
 const elements = {
@@ -102,6 +102,7 @@ function normalizeTests(tests, sectionId = "default") {
 
     return {
       id: test.id || `${sectionId}-test-${testIndex + 1}`,
+      legacyId: test.legacyId || test.id || "",
       title: test.title || `Тест ${testIndex + 1}`,
       description: test.description || "",
       questions: shuffleArray(questions)
@@ -151,15 +152,22 @@ function saveProgress() {
 
 function ensureProgressShape() {
   getAllTests().forEach((test) => {
-    if (
-      !state.progress[test.id] ||
-      typeof state.progress[test.id] !== "object" ||
-      Array.isArray(state.progress[test.id])
-    ) {
-      state.progress[test.id] = {};
-    }
+    ensureProgressStore(test.id);
+    if (test.legacyId) ensureProgressStore(test.legacyId);
   });
   saveProgress();
+}
+
+function ensureProgressStore(testId) {
+  if (!testId) return;
+
+  if (
+    !state.progress[testId] ||
+    typeof state.progress[testId] !== "object" ||
+    Array.isArray(state.progress[testId])
+  ) {
+    state.progress[testId] = {};
+  }
 }
 
 function hydrateRepeatQueuesFromProgress() {
@@ -214,7 +222,8 @@ function renderTestCards() {
     const answered = getAnsweredCount(test);
     const total = getBaseQuestionTotal(test);
     const repeats = getRepeatCount(test);
-    const warning = total === TARGET_QUESTIONS_PER_TEST ? "" : `Сейчас добавлено ${total} из 100`;
+    const warning =
+      total === TARGET_QUESTIONS_PER_TEST ? "" : `Сейчас добавлено ${total} из ${TARGET_QUESTIONS_PER_TEST}`;
     const repeatText = repeats ? `, повторов: ${repeats}` : "";
 
     node.dataset.testIndex = String(index);
@@ -389,15 +398,15 @@ function renderResult(test) {
   elements.resultText.textContent =
     total === TARGET_QUESTIONS_PER_TEST
       ? `Итог по тесту: ${percent}%. Ошибочные вопросы в конце повторялись: ${repeats}.`
-      : `Пока в базе ${total} вопроса из 100. Когда пришлёшь все вопросы, результат будет считаться по полному тесту.`;
+      : `Пока в базе ${total} вопроса из ${TARGET_QUESTIONS_PER_TEST}. Когда пришлёшь все вопросы, результат будет считаться по полному тесту.`;
 }
 
 function selectAnswer(test, question, answerSourceIndex) {
   const baseId = getQuestionBaseId(question);
   const isCorrect = answerSourceIndex === question.answerSourceIndex;
 
-  state.progress[test.id][getQuestionAttemptId(question)] = answerSourceIndex;
-  state.progress[test.id][baseId] = answerSourceIndex;
+  writeProgressAnswer(test, getQuestionAttemptId(question), answerSourceIndex);
+  writeProgressAnswer(test, baseId, answerSourceIndex);
 
   if (isCorrect) {
     removeQueuedRepeats(test, baseId);
@@ -461,11 +470,33 @@ function getAnsweredAttemptsCount(test) {
 }
 
 function getSelectedAnswer(test, question) {
-  return state.progress[test.id]?.[getQuestionAttemptId(question)];
+  return readProgressAnswer(test, getQuestionAttemptId(question));
 }
 
 function getLatestSelectedAnswer(test, question) {
-  return state.progress[test.id]?.[getQuestionBaseId(question)];
+  return readProgressAnswer(test, getQuestionBaseId(question));
+}
+
+function readProgressAnswer(test, answerId) {
+  const currentAnswer = state.progress[test.id]?.[answerId];
+  if (Number.isInteger(currentAnswer)) return currentAnswer;
+
+  if (test.legacyId && test.legacyId !== test.id) {
+    const legacyAnswer = state.progress[test.legacyId]?.[answerId];
+    if (Number.isInteger(legacyAnswer)) return legacyAnswer;
+  }
+
+  return undefined;
+}
+
+function writeProgressAnswer(test, answerId, answerSourceIndex) {
+  ensureProgressStore(test.id);
+  state.progress[test.id][answerId] = answerSourceIndex;
+
+  if (test.legacyId && test.legacyId !== test.id) {
+    ensureProgressStore(test.legacyId);
+    state.progress[test.legacyId][answerId] = answerSourceIndex;
+  }
 }
 
 function getScore(test) {

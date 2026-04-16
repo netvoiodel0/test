@@ -88,17 +88,17 @@ button {
 }
 
 .study-photo {
-  height: 164px;
+  height: 220px;
   overflow: hidden;
   border-radius: 8px;
-  background: #dfe7dd;
+  background: #ffffff;
 }
 
 .study-photo img {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .test-list-header {
@@ -473,7 +473,7 @@ button {
   }
 
   .study-photo {
-    height: 120px;
+    height: 190px;
   }
 
   .section-tabs {

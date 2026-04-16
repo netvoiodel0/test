@@ -2,12 +2,13 @@ window.TEST_SECTIONS = [
     {
         "id":  "sociology",
         "title":  "Социология",
-        "description":  "3 теста по 100 вопросов из документа Да.docx",
+        "description":  "6 тестов по 50 вопросов",
         "tests":  [
                       {
                           "id":  "test-1",
+                          "legacyId":  "test-1",
                           "title":  "Тест 1",
-                          "description":  "100 вопросов из документа Да.docx",
+                          "description":  "50 вопросов. Часть 1 из тест 1",
                           "questions":  [
                                             {
                                                 "id":  "t1-q001",
@@ -558,7 +559,15 @@ window.TEST_SECTIONS = [
                                                                 "либеральным обществом"
                                                             ],
                                                 "answer":  0
-                                            },
+                                            }
+                                        ]
+                      },
+                      {
+                          "id":  "test-1-part-2",
+                          "legacyId":  "test-1",
+                          "title":  "Тест 2",
+                          "description":  "50 вопросов. Часть 2 из тест 1",
+                          "questions":  [
                                             {
                                                 "id":  "t1-q051",
                                                 "text":  "Человек, участвующий в социологическом исследовании в качестве носителя информации:",
@@ -1113,8 +1122,9 @@ window.TEST_SECTIONS = [
                       },
                       {
                           "id":  "test-2",
-                          "title":  "Тест 2",
-                          "description":  "100 вопросов из документа Да.docx",
+                          "legacyId":  "test-2",
+                          "title":  "Тест 3",
+                          "description":  "50 вопросов. Часть 1 из тест 2",
                           "questions":  [
                                             {
                                                 "id":  "t2-q001",
@@ -1665,7 +1675,15 @@ window.TEST_SECTIONS = [
                                                                 "кооперативное движение"
                                                             ],
                                                 "answer":  0
-                                            },
+                                            }
+                                        ]
+                      },
+                      {
+                          "id":  "test-2-part-2",
+                          "legacyId":  "test-2",
+                          "title":  "Тест 4",
+                          "description":  "50 вопросов. Часть 2 из тест 2",
+                          "questions":  [
                                             {
                                                 "id":  "t2-q051",
                                                 "text":  "Автор работы «Протестантская этика и дух капитализма»:",
@@ -2220,8 +2238,9 @@ window.TEST_SECTIONS = [
                       },
                       {
                           "id":  "test-3",
-                          "title":  "Тест 3",
-                          "description":  "100 вопросов из документа Да.docx",
+                          "legacyId":  "test-3",
+                          "title":  "Тест 5",
+                          "description":  "50 вопросов. Часть 1 из тест 3",
                           "questions":  [
                                             {
                                                 "id":  "t3-q001",
@@ -2772,7 +2791,15 @@ window.TEST_SECTIONS = [
                                                                 "Эмиль Дюркгейм"
                                                             ],
                                                 "answer":  0
-                                            },
+                                            }
+                                        ]
+                      },
+                      {
+                          "id":  "test-3-part-2",
+                          "legacyId":  "test-3",
+                          "title":  "Тест 6",
+                          "description":  "50 вопросов. Часть 2 из тест 3",
+                          "questions":  [
                                             {
                                                 "id":  "t3-q051",
                                                 "text":  "Согласно этой теории богатые становятся богаче, бедные – беднее:",
@@ -3330,12 +3357,13 @@ window.TEST_SECTIONS = [
     {
         "id":  "politology",
         "title":  "Политология",
-        "description":  "3 теста по 100 вопросов из документа нет.docx",
+        "description":  "6 тестов по 50 вопросов",
         "tests":  [
                       {
                           "id":  "politology-test-1",
+                          "legacyId":  "politology-test-1",
                           "title":  "Тест 1",
-                          "description":  "100 вопросов из документа нет.docx",
+                          "description":  "50 вопросов. Часть 1 из тест 1",
                           "questions":  [
                                             {
                                                 "id":  "p1-q001",
@@ -3886,7 +3914,15 @@ window.TEST_SECTIONS = [
                                                                 "Коммунизм"
                                                             ],
                                                 "answer":  0
-                                            },
+                                            }
+                                        ]
+                      },
+                      {
+                          "id":  "politology-test-1-part-2",
+                          "legacyId":  "politology-test-1",
+                          "title":  "Тест 2",
+                          "description":  "50 вопросов. Часть 2 из тест 1",
+                          "questions":  [
                                             {
                                                 "id":  "p1-q051",
                                                 "text":  "Сторонники этой концепции защищали свободу предпринимательства, парламентский строй, политическую свободу личности, гласность",
@@ -4441,8 +4477,9 @@ window.TEST_SECTIONS = [
                       },
                       {
                           "id":  "politology-test-2",
-                          "title":  "Тест 2",
-                          "description":  "100 вопросов из документа нет.docx",
+                          "legacyId":  "politology-test-2",
+                          "title":  "Тест 3",
+                          "description":  "50 вопросов. Часть 1 из тест 2",
                           "questions":  [
                                             {
                                                 "id":  "p2-q001",
@@ -4993,7 +5030,15 @@ window.TEST_SECTIONS = [
                                                                 "З. Фрейд, Э. Фромм"
                                                             ],
                                                 "answer":  0
-                                            },
+                                            }
+                                        ]
+                      },
+                      {
+                          "id":  "politology-test-2-part-2",
+                          "legacyId":  "politology-test-2",
+                          "title":  "Тест 4",
+                          "description":  "50 вопросов. Часть 2 из тест 2",
+                          "questions":  [
                                             {
                                                 "id":  "p2-q051",
                                                 "text":  "Основатели теории общественного договора",
@@ -5548,8 +5593,9 @@ window.TEST_SECTIONS = [
                       },
                       {
                           "id":  "politology-test-3",
-                          "title":  "Тест 3",
-                          "description":  "100 вопросов из документа нет.docx",
+                          "legacyId":  "politology-test-3",
+                          "title":  "Тест 5",
+                          "description":  "50 вопросов. Часть 1 из тест 3",
                           "questions":  [
                                             {
                                                 "id":  "p3-q001",
@@ -6100,7 +6146,15 @@ window.TEST_SECTIONS = [
                                                                 "Политическая благотворительность"
                                                             ],
                                                 "answer":  0
-                                            },
+                                            }
+                                        ]
+                      },
+                      {
+                          "id":  "politology-test-3-part-2",
+                          "legacyId":  "politology-test-3",
+                          "title":  "Тест 6",
+                          "description":  "50 вопросов. Часть 2 из тест 3",
+                          "questions":  [
                                             {
                                                 "id":  "p3-q051",
                                                 "text":  "Совокупность политических идей и взглядов... возникающих из непосредственного восприятия будничной жизни",
