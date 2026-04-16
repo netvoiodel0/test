@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Сайт для прохождения тестов по социологии и политологии с перемешиванием и быстрым показом правильного ответа."
+    />
+    <meta name="theme-color" content="#1f8a70" />
+    <title>Тесты</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">2 раздела, 6 тестов по 100 вопросов</p>
+          <h1>Тренировка перед зачётом</h1>
+        </div>
+        <button class="ghost-button" id="resetAllButton" type="button">Сбросить прогресс</button>
+      </header>
+
+      <main class="workspace">
+        <aside class="test-list" aria-label="Список тестов">
+          <div class="study-photo" aria-hidden="true">
+            <img
+              src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=900&q=80"
+              alt=""
+            />
+          </div>
+
+          <div class="section-switcher">
+            <p class="eyebrow">Раздел</p>
+            <div class="section-tabs" id="sectionTabs" aria-label="Разделы тестов"></div>
+          </div>
+
+          <div class="test-list-header">
+            <h2>Выбери тест</h2>
+            <p>Прогресс сохраняется в этом браузере.</p>
+          </div>
+
+          <div class="test-cards" id="testCards"></div>
+        </aside>
+
+        <section class="quiz-panel" aria-live="polite">
+          <div class="quiz-toolbar">
+            <div>
+              <p class="eyebrow" id="activeTestLabel">Тест 1</p>
+              <h2 id="activeTestTitle">Название теста</h2>
+            </div>
+            <div class="score-pill" id="answeredCount">0 / 100</div>
+          </div>
+
+          <div class="progress-track" aria-label="Прогресс теста">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+
+          <article class="question-area">
+            <div class="question-meta">
+              <span id="questionNumber">Вопрос 1</span>
+              <span id="questionStatus">Не отвечен</span>
+            </div>
+
+            <h3 id="questionText">Вопрос появится здесь</h3>
+
+            <div class="options" id="answerOptions"></div>
+
+            <div class="feedback hidden" id="feedback"></div>
+          </article>
+
+          <div class="navigation">
+            <button class="secondary-button" id="prevButton" type="button">Назад</button>
+            <div class="jump-list" id="jumpList" aria-label="Быстрый переход по вопросам"></div>
+            <button class="primary-button" id="nextButton" type="button">Дальше</button>
+          </div>
+
+          <section class="result-panel hidden" id="resultPanel">
+            <div>
+              <p class="eyebrow">Результат</p>
+              <h2 id="resultTitle">0 правильных</h2>
+              <p id="resultText"></p>
+            </div>
+            <button class="primary-button" id="finishButton" type="button">Посмотреть ошибки</button>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <template id="testCardTemplate">
+      <button class="test-card" type="button">
+        <span class="test-card-kicker"></span>
+        <strong></strong>
+        <span class="test-card-progress"></span>
+      </button>
+    </template>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
