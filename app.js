@@ -76,21 +76,12 @@ function normalizeSections(sections) {
 function normalizeTests(tests, sectionId = "default") {
   return tests.map((test, testIndex) => {
     const questions = (test.questions || []).map((question, questionIndex) => {
+      const questionId =
+        question.id || `${sectionId}-t${testIndex + 1}-q${String(questionIndex + 1).padStart(3, "0")}`;
       const options = Array.isArray(question.options) ? question.options : [];
-      const rawAnswer = Number.isInteger(question.answer) ? question.answer : 0;
-      const answerSourceIndex = options.length
-        ? Math.min(Math.max(rawAnswer, 0), options.length - 1)
-        : 0;
-
-      const normalizedQuestion = shuffleQuestionOptions({
-        id:
-          question.id ||
-          `${sectionId}-t${testIndex + 1}-q${String(questionIndex + 1).padStart(3, "0")}`,
-        text: question.text || "Вопрос без текста",
-        options,
-        answerSourceIndex,
-        explanation: question.explanation || ""
-      });
+      const normalizedQuestion = options.length
+        ? normalizeChoiceQuestion(question, questionId)
+        : normalizeTextQuestion(question, questionId);
 
       return {
         ...normalizedQuestion,
@@ -108,6 +99,39 @@ function normalizeTests(tests, sectionId = "default") {
       questions: shuffleArray(questions)
     };
   });
+}
+
+function normalizeChoiceQuestion(question, questionId) {
+  const options = Array.isArray(question.options) ? question.options : [];
+  const rawAnswer = Number.isInteger(question.answer) ? question.answer : 0;
+  const answerSourceIndex = options.length
+    ? Math.min(Math.max(rawAnswer, 0), options.length - 1)
+    : 0;
+
+  return shuffleQuestionOptions({
+    id: questionId,
+    type: "choice",
+    text: question.text || "Вопрос без текста",
+    options,
+    answerSourceIndex,
+    explanation: question.explanation || ""
+  });
+}
+
+function normalizeTextQuestion(question, questionId) {
+  const correctText = String(question.correctText || question.answerText || question.answer || "").trim();
+  const acceptedAnswers = Array.isArray(question.acceptedAnswers) && question.acceptedAnswers.length
+    ? question.acceptedAnswers.map((answer) => String(answer).trim()).filter(Boolean)
+    : [correctText];
+
+  return {
+    id: questionId,
+    type: "text",
+    text: question.text || "Вопрос без текста",
+    correctText,
+    acceptedAnswers,
+    explanation: question.explanation || ""
+  };
 }
 
 function shuffleQuestionOptions(question) {
@@ -286,7 +310,7 @@ function render() {
   const total = getQuestionTotal(test);
   const progressPercent = Math.round((answered / TARGET_QUESTIONS_PER_TEST) * 100);
   const selectedAnswer = getSelectedAnswer(test, question);
-  const isAnswered = Number.isInteger(selectedAnswer);
+  const isAnswered = hasStoredAnswerValue(selectedAnswer);
   const questionLabel = question.isRepeat ? "Повтор ошибки" : "Вопрос";
   const section = getActiveSection();
 
@@ -300,7 +324,7 @@ function render() {
     : isAnswered ? "Отвечен" : "Не отвечен";
   elements.questionText.textContent = question.text;
 
-  renderOptions(test, question, selectedAnswer);
+  renderAnswerArea(test, question, selectedAnswer);
   renderFeedback(question, selectedAnswer);
   renderJumpList(test);
   renderResult(test);
@@ -310,8 +334,13 @@ function render() {
   elements.nextButton.textContent = state.activeQuestionIndex === total - 1 ? "Конец" : "Дальше";
 }
 
-function renderOptions(test, question, selectedAnswer) {
+function renderAnswerArea(test, question, selectedAnswer) {
   elements.answerOptions.innerHTML = "";
+
+  if (question.type === "text") {
+    renderTextAnswerForm(test, question, selectedAnswer);
+    return;
+  }
 
   question.options.forEach((option, index) => {
     const optionSourceIndex = getOptionSourceIndex(question, index);
@@ -341,15 +370,44 @@ function renderOptions(test, question, selectedAnswer) {
   });
 }
 
+function renderTextAnswerForm(test, question, selectedAnswer) {
+  const form = document.createElement("div");
+  const input = document.createElement("input");
+  const button = document.createElement("button");
+
+  form.className = "text-answer-form";
+  input.className = "text-answer-input";
+  input.type = "text";
+  input.placeholder = "Впиши правильный ответ";
+  input.value = typeof selectedAnswer === "string" ? selectedAnswer : "";
+  input.autocomplete = "off";
+  input.spellcheck = false;
+
+  button.type = "button";
+  button.className = "primary-button text-answer-button";
+  button.textContent = "Проверить";
+  button.addEventListener("click", () => submitTextAnswer(test, question, input.value));
+
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      submitTextAnswer(test, question, input.value);
+    }
+  });
+
+  form.append(input, button);
+  elements.answerOptions.appendChild(form);
+}
+
 function renderFeedback(question, selectedAnswer) {
-  if (!Number.isInteger(selectedAnswer)) {
+  if (!hasStoredAnswerValue(selectedAnswer)) {
     elements.feedback.className = "feedback hidden";
     elements.feedback.textContent = "";
     return;
   }
 
-  const isCorrect = selectedAnswer === question.answerSourceIndex;
-  const correctText = getCorrectOptionText(question);
+  const isCorrect = isAnswerCorrect(question, selectedAnswer);
+  const correctText = getCorrectAnswerText(question);
   const explanation = question.explanation ? ` ${question.explanation}` : "";
   const repeatText = isCorrect ? "" : " Вопрос добавлен в конец для повторения.";
 
@@ -369,7 +427,7 @@ function renderJumpList(test) {
     button.type = "button";
     button.className = "jump-button";
     button.classList.toggle("active", index === state.activeQuestionIndex);
-    button.classList.toggle("answered", Number.isInteger(selectedAnswer));
+    button.classList.toggle("answered", hasStoredAnswerValue(selectedAnswer));
     button.classList.toggle("repeat", Boolean(question.isRepeat));
     button.textContent = String(index + 1);
     button.title = question.isRepeat
@@ -402,11 +460,22 @@ function renderResult(test) {
 }
 
 function selectAnswer(test, question, answerSourceIndex) {
-  const baseId = getQuestionBaseId(question);
-  const isCorrect = answerSourceIndex === question.answerSourceIndex;
+  saveAnswer(test, question, answerSourceIndex);
+}
 
-  writeProgressAnswer(test, getQuestionAttemptId(question), answerSourceIndex);
-  writeProgressAnswer(test, baseId, answerSourceIndex);
+function submitTextAnswer(test, question, textAnswer) {
+  const answerValue = String(textAnswer).trim();
+  if (!answerValue) return;
+
+  saveAnswer(test, question, answerValue);
+}
+
+function saveAnswer(test, question, answerValue) {
+  const baseId = getQuestionBaseId(question);
+  const isCorrect = isAnswerCorrect(question, answerValue);
+
+  writeProgressAnswer(test, getQuestionAttemptId(question), answerValue);
+  writeProgressAnswer(test, baseId, answerValue);
 
   if (isCorrect) {
     removeQueuedRepeats(test, baseId);
@@ -462,11 +531,11 @@ function getRepeatCount(test) {
 }
 
 function getAnsweredCount(test) {
-  return getBaseQuestions(test).filter((question) => Number.isInteger(getLatestSelectedAnswer(test, question))).length;
+  return getBaseQuestions(test).filter((question) => hasStoredAnswerValue(getLatestSelectedAnswer(test, question))).length;
 }
 
 function getAnsweredAttemptsCount(test) {
-  return test.questions.filter((question) => Number.isInteger(getSelectedAnswer(test, question))).length;
+  return test.questions.filter((question) => hasStoredAnswerValue(getSelectedAnswer(test, question))).length;
 }
 
 function getSelectedAnswer(test, question) {
@@ -479,11 +548,11 @@ function getLatestSelectedAnswer(test, question) {
 
 function readProgressAnswer(test, answerId) {
   const currentAnswer = state.progress[test.id]?.[answerId];
-  if (Number.isInteger(currentAnswer)) return currentAnswer;
+  if (hasStoredAnswerValue(currentAnswer)) return currentAnswer;
 
   if (test.legacyId && test.legacyId !== test.id) {
     const legacyAnswer = state.progress[test.legacyId]?.[answerId];
-    if (Number.isInteger(legacyAnswer)) return legacyAnswer;
+    if (hasStoredAnswerValue(legacyAnswer)) return legacyAnswer;
   }
 
   return undefined;
@@ -501,14 +570,14 @@ function writeProgressAnswer(test, answerId, answerSourceIndex) {
 
 function getScore(test) {
   return getBaseQuestions(test).reduce((score, question) => {
-    return getLatestSelectedAnswer(test, question) === question.answerSourceIndex ? score + 1 : score;
+    return isAnswerCorrect(question, getLatestSelectedAnswer(test, question)) ? score + 1 : score;
   }, 0);
 }
 
 function moveToFirstMistake() {
   const test = getActiveTest();
   const firstMistake = test.questions.findIndex((question) => {
-    return getLatestSelectedAnswer(test, question) !== question.answerSourceIndex;
+    return !isAnswerCorrect(question, getLatestSelectedAnswer(test, question));
   });
 
   state.activeQuestionIndex = firstMistake >= 0 ? firstMistake : 0;
@@ -520,7 +589,7 @@ function queueRepeatQuestion(test, question) {
     return (
       candidate.isRepeat &&
       getQuestionBaseId(candidate) === baseId &&
-      !Number.isInteger(getSelectedAnswer(test, candidate))
+      !hasStoredAnswerValue(getSelectedAnswer(test, candidate))
     );
   });
 
@@ -532,7 +601,7 @@ function queueRepeatQuestion(test, question) {
 
 function createRepeatQuestion(test, question) {
   const baseId = getQuestionBaseId(question);
-  const repeatedQuestion = reshuffleQuestionOptions(question);
+  const repeatedQuestion = question.type === "text" ? { ...question } : reshuffleQuestionOptions(question);
 
   return {
     ...repeatedQuestion,
@@ -566,7 +635,7 @@ function removeQueuedRepeats(test, baseId) {
   test.questions = test.questions.filter((question) => {
     const isSameBaseRepeat = question.isRepeat && getQuestionBaseId(question) === baseId;
     const isCurrentQuestion = getQuestionAttemptId(question) === currentAttemptId;
-    const isAnsweredRepeat = Number.isInteger(getSelectedAnswer(test, question));
+    const isAnsweredRepeat = hasStoredAnswerValue(getSelectedAnswer(test, question));
 
     return !isSameBaseRepeat || isCurrentQuestion || isAnsweredRepeat;
   });
@@ -600,12 +669,43 @@ function getOptionSourceIndex(question, optionIndex) {
   return question.optionSourceIndexes?.[optionIndex] ?? optionIndex;
 }
 
-function getCorrectOptionText(question) {
+function getCorrectAnswerText(question) {
+  if (question.type === "text") {
+    return question.correctText || question.acceptedAnswers?.[0] || "не указан";
+  }
+
   const answerIndex = question.optionSourceIndexes?.findIndex(
     (sourceIndex) => sourceIndex === question.answerSourceIndex
   );
 
   return question.options[answerIndex >= 0 ? answerIndex : question.answer] || "не указан";
+}
+
+function isAnswerCorrect(question, answerValue) {
+  if (!hasStoredAnswerValue(answerValue)) return false;
+
+  if (question.type === "text") {
+    const normalizedAnswer = normalizeTextAnswer(answerValue);
+    return question.acceptedAnswers.some((acceptedAnswer) => {
+      return normalizeTextAnswer(acceptedAnswer) === normalizedAnswer;
+    });
+  }
+
+  return answerValue === question.answerSourceIndex;
+}
+
+function hasStoredAnswerValue(answerValue) {
+  return Number.isInteger(answerValue) || (typeof answerValue === "string" && answerValue.trim().length > 0);
+}
+
+function normalizeTextAnswer(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .replace(/[«»"']/g, "")
+    .replace(/[.,!?;:()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function renderEmptyState() {

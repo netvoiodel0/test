@@ -281,6 +281,31 @@ button {
   gap: 10px;
 }
 
+.text-answer-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.text-answer-input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 14px;
+  color: var(--ink);
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.text-answer-input:focus-visible {
+  border-color: var(--green);
+  outline: none;
+}
+
+.text-answer-button {
+  min-width: 124px;
+}
+
 .option-button {
   width: 100%;
   min-height: 58px;
@@ -521,6 +546,10 @@ button {
   .option-button {
     grid-template-columns: 32px 1fr;
     padding: 10px;
+  }
+
+  .text-answer-form {
+    grid-template-columns: 1fr;
   }
 
   .option-letter {
