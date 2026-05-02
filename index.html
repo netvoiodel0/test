@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Сайт для прохождения тестов по социологии, политологии и педагогике с перемешиванием и быстрым показом правильного ответа."
+      content="Сайт для прохождения тестов и игры в Tetris с общей таблицей рекордов."
     />
     <meta name="theme-color" content="#1f8a70" />
-    <title>Тесты</title>
+    <title>Тесты и Tetris</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">4 раздела, 24 теста</p>
+          <p class="eyebrow">3 раздела, 23 теста и Tetris</p>
           <h1>Тренировка перед зачётом</h1>
         </div>
         <button class="ghost-button" id="resetAllButton" type="button">Сбросить прогресс</button>
@@ -30,6 +30,12 @@
             />
           </div>
 
+          <div class="mode-switcher">
+            <p class="eyebrow">Режим</p>
+            <div class="mode-tabs" id="modeTabs" aria-label="Режим сайта"></div>
+          </div>
+
+          <div id="quizSidebar">
           <div class="section-switcher">
             <p class="eyebrow">Раздел</p>
             <div class="section-tabs" id="sectionTabs" aria-label="Разделы тестов"></div>
@@ -41,9 +47,11 @@
           </div>
 
           <div class="test-cards" id="testCards"></div>
+          </div>
         </aside>
 
-        <section class="quiz-panel" aria-live="polite">
+        <section class="quiz-panel">
+          <div id="quizView" aria-live="polite">
           <div class="quiz-toolbar">
             <div>
               <p class="eyebrow" id="activeTestLabel">Тест 1</p>
@@ -83,6 +91,82 @@
             </div>
             <button class="primary-button" id="finishButton" type="button">Посмотреть ошибки</button>
           </section>
+          </div>
+
+          <section class="tetris-view hidden" id="tetrisView" aria-label="Tetris">
+            <div class="tetris-toolbar">
+              <div>
+                <p class="eyebrow">Arcade</p>
+                <h2>Tetris</h2>
+                <p class="tetris-copy">Стрелки двигают фигуру, вверх поворачивает, пробел делает жёсткое падение.</p>
+              </div>
+              <div class="tetris-actions">
+                <button class="primary-button" id="tetrisStartButton" type="button">Новая игра</button>
+                <button class="secondary-button" id="tetrisPauseButton" type="button">Пауза</button>
+              </div>
+            </div>
+
+            <div class="tetris-layout">
+              <div class="tetris-stage">
+                <canvas id="tetrisCanvas" width="300" height="600" aria-label="Поле Tetris"></canvas>
+                <div class="tetris-overlay" id="tetrisOverlay">Нажми «Новая игра»</div>
+              </div>
+
+              <div class="tetris-side">
+                <div class="tetris-stats">
+                  <div class="tetris-stat">
+                    <span>Очки</span>
+                    <strong id="tetrisScore">0</strong>
+                  </div>
+                  <div class="tetris-stat">
+                    <span>Линии</span>
+                    <strong id="tetrisLines">0</strong>
+                  </div>
+                  <div class="tetris-stat">
+                    <span>Уровень</span>
+                    <strong id="tetrisLevel">1</strong>
+                  </div>
+                </div>
+
+                <div class="tetris-preview">
+                  <p class="eyebrow">Следующая</p>
+                  <canvas id="tetrisNextCanvas" width="120" height="120" aria-label="Следующая фигура"></canvas>
+                </div>
+
+                <div class="leaderboard-panel">
+                  <div class="leaderboard-head">
+                    <div>
+                      <p class="eyebrow">Рекорды</p>
+                      <h3>Таблица лидеров</h3>
+                    </div>
+                    <button class="ghost-button leaderboard-refresh" id="leaderboardRefreshButton" type="button">Обновить</button>
+                  </div>
+
+                  <form class="leaderboard-form" id="leaderboardForm">
+                    <label class="leaderboard-label" for="leaderboardInitials">Инициалы</label>
+                    <div class="leaderboard-row">
+                      <input
+                        class="leaderboard-input"
+                        id="leaderboardInitials"
+                        name="initials"
+                        type="text"
+                        maxlength="4"
+                        autocomplete="off"
+                        placeholder="VOV"
+                      />
+                      <button class="primary-button leaderboard-submit" id="leaderboardSubmitButton" type="submit">
+                        Сохранить
+                      </button>
+                    </div>
+                  </form>
+
+                  <p class="leaderboard-hint" id="leaderboardHint">Закончи игру и отправь счёт, чтобы он появился у всех посетителей.</p>
+                  <ol class="leaderboard-list" id="leaderboardList"></ol>
+                  <p class="leaderboard-status" id="leaderboardStatus"></p>
+                </div>
+              </div>
+            </div>
+          </section>
         </section>
       </main>
     </div>
@@ -95,6 +179,7 @@
       </button>
     </template>
 
+    <script src="tetris.js"></script>
     <script src="questions.js"></script>
     <script src="app.js"></script>
   </body>

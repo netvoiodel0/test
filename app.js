@@ -1,10 +1,28 @@
 const STORAGE_KEY = "quiz-site-progress-v1";
+const VIEW_STORAGE_KEY = "quiz-site-active-view-v1";
 const TARGET_QUESTIONS_PER_TEST = 50;
 const LETTERS = ["A", "B", "C", "D", "E", "F"];
+const VIEW_OPTIONS = [
+  { id: "quiz", title: "Тесты" },
+  { id: "tetris", title: "Tetris" }
+];
+
+const SOURCE_SECTIONS = window.TEST_SECTIONS || [
+  {
+    id: "default",
+    title: "Тесты",
+    description: "",
+    tests: window.TEST_BANKS || []
+  }
+];
 
 const elements = {
+  modeTabs: document.querySelector("#modeTabs"),
+  quizSidebar: document.querySelector("#quizSidebar"),
   sectionTabs: document.querySelector("#sectionTabs"),
   testCards: document.querySelector("#testCards"),
+  quizView: document.querySelector("#quizView"),
+  tetrisView: document.querySelector("#tetrisView"),
   activeTestLabel: document.querySelector("#activeTestLabel"),
   activeTestTitle: document.querySelector("#activeTestTitle"),
   answeredCount: document.querySelector("#answeredCount"),
@@ -25,18 +43,12 @@ const elements = {
   cardTemplate: document.querySelector("#testCardTemplate")
 };
 
+let tetrisArcade = null;
+
 const state = {
-  sections: normalizeSections(
-    window.TEST_SECTIONS || [
-      {
-        id: "default",
-        title: "Тесты",
-        description: "",
-        tests: window.TEST_BANKS || []
-      }
-    ]
-  ),
+  sections: normalizeSections(SOURCE_SECTIONS),
   progress: loadProgress(),
+  activeView: loadActiveView(),
   activeSectionIndex: 0,
   activeTestIndex: 0,
   activeQuestionIndex: 0
@@ -45,8 +57,12 @@ const state = {
 init();
 
 function init() {
+  bindEvents();
+  initTetris();
+  renderModeTabs();
+
   if (!state.sections.length || !getActiveTests().length) {
-    renderEmptyState();
+    render();
     return;
   }
 
@@ -54,7 +70,6 @@ function init() {
   hydrateRepeatQueuesFromProgress();
   renderSectionTabs();
   renderTestCards();
-  bindEvents();
   render();
 }
 
@@ -170,8 +185,21 @@ function loadProgress() {
   }
 }
 
+function loadActiveView() {
+  try {
+    const storedView = localStorage.getItem(VIEW_STORAGE_KEY);
+    return storedView === "tetris" ? "tetris" : "quiz";
+  } catch {
+    return "quiz";
+  }
+}
+
 function saveProgress() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
+}
+
+function saveActiveView() {
+  localStorage.setItem(VIEW_STORAGE_KEY, state.activeView);
 }
 
 function ensureProgressShape() {
@@ -222,9 +250,12 @@ function bindEvents() {
     const shouldReset = confirm("Сбросить все ответы и результаты?");
     if (!shouldReset) return;
 
+    const activeSectionId = getActiveSection()?.id || "";
+    const activeTestId = getActiveTest()?.id || "";
+
     state.progress = {};
+    rebuildSections(activeSectionId, activeTestId);
     ensureProgressShape();
-    resetRepeatQueues();
     state.activeQuestionIndex = 0;
     renderSectionTabs();
     renderTestCards();
@@ -235,6 +266,63 @@ function bindEvents() {
     moveToFirstMistake();
     render();
   });
+}
+
+function rebuildSections(preferredSectionId = "", preferredTestId = "") {
+  state.sections = normalizeSections(SOURCE_SECTIONS);
+  syncActiveIndexes(preferredSectionId, preferredTestId);
+}
+
+function syncActiveIndexes(preferredSectionId = "", preferredTestId = "") {
+  const sectionIndex = state.sections.findIndex((section) => section.id === preferredSectionId);
+  state.activeSectionIndex = sectionIndex >= 0 ? sectionIndex : 0;
+
+  const tests = getActiveTests();
+  const testIndex = tests.findIndex((test) => test.id === preferredTestId);
+  state.activeTestIndex = testIndex >= 0 ? testIndex : 0;
+}
+
+function initTetris() {
+  if (typeof window.createTetrisArcade !== "function") return;
+  tetrisArcade = window.createTetrisArcade();
+  tetrisArcade.setActive(state.activeView === "tetris");
+}
+
+function renderModeTabs() {
+  elements.modeTabs.innerHTML = "";
+
+  VIEW_OPTIONS.forEach((view) => {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "mode-tab";
+    button.textContent = view.title;
+    button.classList.toggle("active", view.id === state.activeView);
+    button.addEventListener("click", () => setActiveView(view.id));
+
+    elements.modeTabs.appendChild(button);
+  });
+}
+
+function setActiveView(viewId) {
+  if (viewId === state.activeView) return;
+
+  state.activeView = viewId === "tetris" ? "tetris" : "quiz";
+  saveActiveView();
+  render();
+}
+
+function renderActiveView() {
+  const isQuizView = state.activeView === "quiz";
+
+  elements.quizSidebar.classList.toggle("hidden", !isQuizView);
+  elements.quizView.classList.toggle("hidden", !isQuizView);
+  elements.tetrisView.classList.toggle("hidden", isQuizView);
+  elements.resetAllButton.classList.toggle("hidden", !isQuizView);
+
+  if (tetrisArcade) {
+    tetrisArcade.setActive(!isQuizView);
+  }
 }
 
 function renderTestCards() {
@@ -298,6 +386,13 @@ function renderSectionTabs() {
 }
 
 function render() {
+  renderModeTabs();
+  renderActiveView();
+
+  if (state.activeView === "tetris") {
+    return;
+  }
+
   const test = getActiveTest();
   const question = getActiveQuestion();
 
